@@ -1,7 +1,25 @@
 """A module for working with bitmap (BMP) images."""
 
 
+def write_blue_scale(filename, pixel_data):
+    range_1 = _linear(40, 100, 7, 0, 203, 107, 32)  # 40
+    range_2 = _linear(66, 203, 107, 32, 255, 255, 237)  # 106
+    range_3 = _linear(57, 255, 255, 237, 0, 170, 255)  # 163
+    range_4 = _linear(55, 0, 170, 255, 0, 2, 0)  # 218
+    range_5 = _linear(37, 0, 2, 0, 100, 7, 0)  # 255
+    black = [bytes((0, 0, 0, 0))]  # 256
+
+    colour_palette = range_1 + range_2 + range_3 + range_4 + range_5 + black
+    write_8_bit(filename, pixel_data, colour_palette)
+
+
 def write_greyscale(filename, pixel_data):
+    # colour table (blue, green, red, 0x00)
+    colour_palette = [bytes((c, c, c, 0)) for c in range(256)]
+    write_8_bit(filename, pixel_data, colour_palette)
+
+
+def write_8_bit(filename, pixel_data, colour_palette):
     """Creates and writes a BMP file.
 
     Args:
@@ -18,9 +36,8 @@ def write_greyscale(filename, pixel_data):
         OSError: If the file could not be written.
     """
 
-    # height, width = get_dimensions(pixel_data)
-    height = len(pixel_data)
-    width = len(pixel_data[0])
+    height, width = get_dimensions(pixel_data)
+    pixel_data = _scale_to_256(pixel_data)
 
     with open(filename, 'wb') as bmp:
         # BMP header
@@ -64,8 +81,8 @@ def write_greyscale(filename, pixel_data):
         bmp.write(b'\x00\x00\x00\x00')
 
         # colour table
-        for c in range(256):
-            bmp.write(bytes((c, c, c, 0)))  # blue, green, red, 0x00
+        for c in colour_palette:
+            bmp.write(c)
 
         # pixel data
         pixel_data_position = bmp.tell()
@@ -115,3 +132,23 @@ def get_dimensions(array):
 
 def _int_to_bytes(i):
     return i.to_bytes(4, byteorder='little')
+
+
+def _scale_to_256(array):
+    minimum = min([min(r) for r in array])
+    maximum = max([max(r) for r in array])
+    return [[int(255 * (x - minimum) / (maximum - minimum)) for x in line] for line in array]
+
+
+def _linear(steps, blue_start, green_start, red_start, blue_end, green_end, red_end):
+    blue_step = int((blue_end - blue_start) / steps)
+    green_step = int((green_end - green_start) / steps)
+    red_step = int((red_end - red_start) / steps)
+    return [bytes((blue_start + step * blue_step,
+                   green_start + step * green_step,
+                   red_start + step * red_step,
+                   0)) for step in range(steps)]
+
+
+if __name__ == '__main__':
+    print(_scale_to_256([[1, 2], [3, 4]]))
