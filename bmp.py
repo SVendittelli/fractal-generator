@@ -2,6 +2,17 @@
 
 
 def write_blue_scale(filename, pixel_data):
+    """Writes an 8-bit using a BMP file using a blue-orange palette.
+
+    Arguments:
+        filename {string} -- The name of the file to be created.
+        pixel_data {[2D array of numbers]} -- A recangular image stored as a sequence of rows.
+
+    Raises:
+        ValueError: If the pixel_data is not a rectangular array.
+        OSError: If the file could not be written.
+    """
+
     range_1 = _linear(40, 100, 7, 0, 203, 107, 32)  # 40
     range_2 = _linear(66, 203, 107, 32, 255, 255, 237)  # 106
     range_3 = _linear(57, 255, 255, 237, 0, 170, 255)  # 163
@@ -14,25 +25,33 @@ def write_blue_scale(filename, pixel_data):
 
 
 def write_greyscale(filename, pixel_data):
-    # colour table (blue, green, red, 0x00)
-    colour_palette = [bytes((c, c, c, 0)) for c in range(256)]
+    """Writes an 8-bit greyscale BMP file.
+
+    Arguments:
+        filename {string} -- The name of the file to be created.
+        pixel_data {[2D array of numbers]} -- A recangular image stored as a sequence of rows.
+
+    Raises:
+        ValueError: If the pixel_data is not a rectangular array.
+        OSError: If the file could not be written.
+    """
+
+    colour_palette = [bytes((c, c, c, 0))
+                      for c in range(1, 256)] + [bytes((0, 0, 0, 0))]
     write_8_bit(filename, pixel_data, colour_palette)
 
 
 def write_8_bit(filename, pixel_data, colour_palette):
-    """Creates and writes a BMP file.
+    """Creates and writes an 8-bit BMP file.
 
-    Args:
-
-        filename: The name of the file to be created.
-
-        pixel_data: A recangular image stored as a sequence of rows.
-            Each row should be an integer between 0-255.
+    Arguments:
+        filename {string} -- The name of the file to be created.
+        pixel_data {[2D array of numbers]} -- A recangular image stored as a sequence of rows.
+        colour_palette {array of bytes} -- The colour palette stored as an array length 256 of bytes of
+            blue, green, red, 0x00.
 
     Raises:
-
-        ValueError: If any values are out of range.
-
+        ValueError: If the pixel_data is not a rectangular array.
         OSError: If the file could not be written.
     """
 
@@ -131,16 +150,46 @@ def get_dimensions(array):
 
 
 def _int_to_bytes(i):
+    """Convert an integer to a little endian 4 byte array.
+
+    Arguments:
+        i {integer} -- The integer to convert.
+
+    Returns:
+        byte array -- The integer converted to 4 bytes.
+    """
     return i.to_bytes(4, byteorder='little')
 
 
 def _scale_to_256(array):
+    """Rescale a 2D array of numbers to a same sized array with the numbers projected onto members of range(256).
+
+    Arguments:
+        array {2D array of numbers} -- The array to be rescaled.
+
+    Returns:
+        2D array of integers -- The input array rescaled to 0-255.
+    """
     minimum = min([min(r) for r in array])
     maximum = max([max(r) for r in array])
     return [[int(255 * (x - minimum) / (maximum - minimum)) for x in line] for line in array]
 
 
 def _linear(steps, blue_start, green_start, red_start, blue_end, green_end, red_end):
+    """Create a byte array of colours in linear steps between two colours.
+
+    Arguments:
+        steps {integer} -- The number of steps to take from the start colour to the end colour.
+        blue_start {integer} -- The value of blue to begin the steps at.
+        green_start {integer} -- The value of green to begin the steps at.
+        red_start {integer} -- The value of red to begin the steps at.
+        blue_end {integer} -- The value of blue to end the steps at.
+        green_end {integer} -- The value of green to end the steps at.
+        red_end {integer} -- The value of red to end the steps at.
+
+    Returns:
+        2D byte array -- The array of colour values to step between.
+    """
     blue_step = int((blue_end - blue_start) / steps)
     green_step = int((green_end - green_start) / steps)
     red_step = int((red_end - red_start) / steps)
