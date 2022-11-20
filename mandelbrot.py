@@ -3,7 +3,7 @@
 from  math import log, sqrt
 import numpy as np
 
-
+# https://linas.org/art-gallery/escape/escape.html
 def mandel(real, imaginary, max_iterations=256):
     x, y = 0, 0
     for i in range(max_iterations):

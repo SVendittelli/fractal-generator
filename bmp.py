@@ -1,29 +1,6 @@
 """A module for working with bitmap (BMP) images."""
 
 
-def write_blue_scale(filename, pixel_data):
-    """Writes an 8-bit using a BMP file using a blue-orange palette.
-
-    Arguments:
-        filename {string} -- The name of the file to be created.
-        pixel_data {[2D array of numbers]} -- A recangular image stored as a sequence of rows.
-
-    Raises:
-        ValueError: If the pixel_data is not a rectangular array.
-        OSError: If the file could not be written.
-    """
-
-    range_1 = _linear(40, 100, 7, 0, 203, 107, 32)  # 40
-    range_2 = _linear(66, 203, 107, 32, 255, 255, 237)  # 106
-    range_3 = _linear(57, 255, 255, 237, 0, 170, 255)  # 163
-    range_4 = _linear(55, 0, 170, 255, 0, 2, 0)  # 218
-    range_5 = _linear(37, 0, 2, 0, 100, 7, 0)  # 255
-    black = [bytes((0, 0, 0, 0))]  # 256
-
-    colour_palette = range_1 + range_2 + range_3 + range_4 + range_5 + black
-    write_8_bit(filename, pixel_data, colour_palette)
-
-
 def write_greyscale(filename, pixel_data):
     """Writes an 8-bit greyscale BMP file.
 
@@ -174,30 +151,3 @@ def _scale_to_256(array):
     maximum = max([max(r) for r in array])
     return [[int(255 * (x - minimum) / (maximum - minimum)) for x in line] for line in array]
 
-
-def _linear(steps, blue_start, green_start, red_start, blue_end, green_end, red_end):
-    """Create a byte array of colours in linear steps between two colours.
-
-    Arguments:
-        steps {integer} -- The number of steps to take from the start colour to the end colour.
-        blue_start {integer} -- The value of blue to begin the steps at.
-        green_start {integer} -- The value of green to begin the steps at.
-        red_start {integer} -- The value of red to begin the steps at.
-        blue_end {integer} -- The value of blue to end the steps at.
-        green_end {integer} -- The value of green to end the steps at.
-        red_end {integer} -- The value of red to end the steps at.
-
-    Returns:
-        2D byte array -- The array of colour values to step between.
-    """
-    blue_step = int((blue_end - blue_start) / steps)
-    green_step = int((green_end - green_start) / steps)
-    red_step = int((red_end - red_start) / steps)
-    return [bytes((blue_start + step * blue_step,
-                   green_start + step * green_step,
-                   red_start + step * red_step,
-                   0)) for step in range(steps)]
-
-
-if __name__ == '__main__':
-    print(_scale_to_256([[1, 2], [3, 4]]))
